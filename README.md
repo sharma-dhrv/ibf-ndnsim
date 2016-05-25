@@ -1,5 +1,39 @@
-ndnSIM
-======
+ICN - ndnSIM
+============
+
+
+Before cloning this repository follow the following steps:-
+
+1. Install libboost dependency for NDN-Sim.
+> sudo apt-get install python-software-properties
+> sudo add-apt-repository ppa:boost-latest/ppa
+> sudo apt-get update
+> sudo apt-get install libboost1.55-all-dev
+
+Make sure that all other version of boost libraries (-dev packages) are removed, otherwise compilation might fail.
+
+2. Install other dependencies.
+> sudo apt-get install python-dev python-pygraphviz python-kiwi
+> sudo apt-get install python-pygoocanvas python-gnome2
+> sudo apt-get install python-rsvg ipython
+
+3. Clone NS-3 and NDN-Sim. 
+> mkdir ndnSIM
+> cd ndnSIM
+git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
+git clone https://github.com/cawka/pybindgen.git pybindgen
+git clone https://git.ucsd.edu/dhsharma/ndnSIM.git ns-3/src/ndnSIM
+
+4. Compile NS-3 with NDN-Sim.
+> cd ns-3
+> ./waf configure --enable-examples
+> ./waf
+
+5. Run an example senario to test the build.
+> ./waf --run=ndn-simple
+OR
+> ./waf --run=ndn-grid
+
 
 [![Build Status](https://travis-ci.org/named-data-ndnSIM/ndnSIM.svg)](https://travis-ci.org/named-data-ndnSIM/ndnSIM)
 
