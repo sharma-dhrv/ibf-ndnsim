@@ -22,6 +22,8 @@
 #ifndef NDN_DATA_HPP
 #define NDN_DATA_HPP
 
+#include <cstdint>
+
 #include "common.hpp"
 #include "name.hpp"
 #include "encoding/block.hpp"
@@ -310,6 +312,24 @@ public: // EqualityComparable concept
   bool
   operator!=(const Data& other) const;
 
+  uint64_t
+  get_ibf();
+
+  void
+  set_ibf(uint64_t i);
+
+  uint64_t
+  get_m();
+
+  void
+  set_m(uint64_t i);
+
+  uint64_t
+  get_d();
+
+  void
+  set_d(uint64_t i);
+
 protected:
   /**
    * @brief Clear the wire encoding.
@@ -328,6 +348,10 @@ private:
 
   nfd::LocalControlHeader m_localControlHeader;
   friend class nfd::LocalControlHeader;
+
+  uint64_t ibf;
+  uint64_t m;
+  uint64_t d;
 };
 
 std::ostream&

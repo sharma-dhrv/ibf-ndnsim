@@ -349,4 +349,40 @@ operator<<(std::ostream& os, const Data& data)
   return os;
 }
 
+uint64_t
+Data::get_ibf()
+{
+  return ibf;
+}
+
+void
+Data::set_ibf(uint64_t i)
+{
+  ibf = i;
+}
+
+uint64_t
+Data::get_m()
+{
+  return m;
+}
+
+void
+Data::set_m(uint64_t i)
+{
+  m = i;
+}
+
+uint64_t
+Data::get_d()
+{
+  return d;
+}
+
+void
+Data::set_d(uint64_t i)
+{
+  d = i;
+}
+
 } // namespace ndn

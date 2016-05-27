@@ -320,4 +320,16 @@ Face::shutdown()
     });
 }
 
+uint64_t
+Face::get_LID()
+{
+  return LID;
+}
+
+void
+Face::set_LID(uint64_t lid)
+{
+  LID = lid;
+}
+
 } // namespace ndn

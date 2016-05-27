@@ -21,6 +21,7 @@
 
 #ifndef NDN_INTEREST_HPP
 #define NDN_INTEREST_HPP
+#include <cstdint>
 
 #include "common.hpp"
 
@@ -435,6 +436,30 @@ public: // EqualityComparable concept
     return !(*this == other);
   }
 
+  uint64_t
+  get_ibf();
+
+  void
+  set_ibf(uint64_t i);
+  
+  uint64_t
+  get_m();
+
+  void
+  set_m(uint64_t i);
+
+  uint64_t
+  get_d();
+
+  void
+  set_d(uint64_t i);
+
+  uint64_t
+  get_hopCounter();
+
+  void
+  set_hopCounter(uint64_t hc);
+
 private:
   Name m_name;
   Selectors m_selectors;
@@ -447,6 +472,12 @@ private:
 
   nfd::LocalControlHeader m_localControlHeader;
   friend class nfd::LocalControlHeader;
+
+  // Semi-stateless forwarding specific fields
+  uint64_t ibf;
+  uint64_t m;
+  uint64_t d;
+  uint64_t hopCounter;
 };
 
 std::ostream&
