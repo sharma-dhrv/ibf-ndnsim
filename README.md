@@ -26,6 +26,8 @@ Before cloning this repository follow the following steps:-
 > cd ns-3
 > ./waf configure --enable-examples
 > ./waf
+> If waf configure fails do this: 
+> sudo apt-get install libcrypto+ sqlite3 libsqlite3-dev
 
 5. Run an example senario to test the build.
 > ./waf --run=ndn-simple
