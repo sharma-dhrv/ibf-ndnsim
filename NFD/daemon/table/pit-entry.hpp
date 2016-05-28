@@ -70,6 +70,12 @@ public:
   explicit
   Entry(const Interest& interest);
 
+  bool
+  isShadowEntry() const;
+  
+  void
+  setShadowEntry(bool shadowEntry);
+
   const Interest&
   getInterest() const;
 
@@ -171,6 +177,7 @@ private:
   shared_ptr<const Interest> m_interest;
   InRecordCollection m_inRecords;
   OutRecordCollection m_outRecords;
+  bool m_shadowEntry;
 
   static const Name LOCALHOST_NAME;
   static const Name LOCALHOP_NAME;
@@ -180,6 +187,12 @@ private:
   friend class nfd::NameTree;
   friend class nfd::name_tree::Entry;
 };
+
+inline bool
+isShadowEntry() const
+{
+  return m_shadowEntry;
+}
 
 inline const Interest&
 Entry::getInterest() const

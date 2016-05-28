@@ -58,13 +58,21 @@ public:
   size_t
   size() const;
 
+  /** \brief searches if th PIT contains a PIT entry for the given prefix
+   *
+   *  If an entry for exact same name and selectors exists, it returns true.
+   *  \return true if an entry exists, false otherwise.
+   */
+  std::pair<shared_pair<pit::Entry>, bool>
+  hasPitEntry(const Interest& interest);
+
   /** \brief inserts a PIT entry for Interest
    *
    *  If an entry for exact same name and selectors exists, that entry is returned.
    *  \return the entry, and true for new entry, false for existing entry
    */
   std::pair<shared_ptr<pit::Entry>, bool>
-  insert(const Interest& interest);
+  insert(const Interest& interest, bool shadowEntry = false);
 
   /** \brief performs a Data match
    *  \return an iterable of all PIT entries matching data

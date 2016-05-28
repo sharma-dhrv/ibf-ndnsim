@@ -78,16 +78,37 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   }
 
   // PIT insert
-  shared_ptr<pit::Entry> pitEntry = m_pit.insert(interest).first;
+  interest.setHopCounter(interest.getHopCounter() + 1);
+  std::pair<shared_ptr<pit::Entry>, bool> entryPair = m_pit.hasPitEntry(interest);
+  bool hasEntry = entryPair.second;
+  shared_ptr<pit::Entry> entry = entryPair.first;
+  shared_ptr<pit::Entry> pitEntry;
+
+  if (interest.getHopCounter() == 0) {
+	pitEntry = m_pit.insert(interest).first;
+  }
+  else {
+	if(static_cast<bool>(entry)) {
+		if(entry->isShadowEntry()) {
+			pitEntry = m_pit.insert(interest, true).first;
+		}
+		else {
+			pitEntry = m_pit.insert(interest).first;
+		}
+	}
+	else {
+		pitEntry = m_pit.insert(interest, true).first;
+	}
+  }
 
   // detect duplicate Nonce
   int dnw = pitEntry->findNonce(interest.getNonce(), inFace);
   bool hasDuplicateNonce = (dnw != pit::DUPLICATE_NONCE_NONE) ||
-                           m_deadNonceList.has(interest.getName(), interest.getNonce());
+		                       m_deadNonceList.has(interest.getName(), interest.getNonce());
   if (hasDuplicateNonce) {
-    // goto Interest loop pipeline
-    this->onInterestLoop(inFace, interest, pitEntry);
-    return;
+	// goto Interest loop pipeline
+	this->onInterestLoop(inFace, interest, pitEntry);
+	return;
   }
 
   // cancel unsatisfy & straggler timer
@@ -115,6 +136,7 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   else {
     this->onContentStoreMiss(inFace, pitEntry, interest);
   }
+
 }
 
 void

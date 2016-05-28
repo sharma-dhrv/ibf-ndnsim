@@ -34,7 +34,14 @@ const Name Entry::LOCALHOP_NAME("ndn:/localhop");
 
 Entry::Entry(const Interest& interest)
   : m_interest(interest.shared_from_this())
+  , m_shadowEntry(false)
 {
+}
+
+void
+setShadowEntry(bool shadowEntry)
+{
+  m_shadowEntry = shadowEntry;
 }
 
 const Name&
