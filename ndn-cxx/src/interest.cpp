@@ -485,39 +485,27 @@ operator<<(std::ostream& os, const Interest& interest)
 }
 
 uint64_t
-Interest::get_ibf()
+Interest::get_num_hash_functions()
 {
-  return ibf;
-}
-
-void
-Interest::set_ibf(uint64_t i)
-{
-  ibf = i;
+  return num_hash_functions;
 }
 
 uint64_t
-Interest::get_m()
+Interest::get_ibf_size_in_bits()
 {
-  return m;
-}
-
-void
-Interest::set_m(uint64_t i)
-{
-  m = i;
+  return ibf_size_in_bits;
 }
 
 uint64_t
-Interest::get_d()
+Interest::get_every_d_hops()
 {
-  return d;
+  return every_d_hops;
 }
 
 void
-Interest::set_d(uint64_t i)
+Interest::set_every_d_hops(uint64_t i)
 {
-  d = i;
+  every_d_hops = i;
 }
 
 uint64_t

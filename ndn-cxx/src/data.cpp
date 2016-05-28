@@ -350,39 +350,27 @@ operator<<(std::ostream& os, const Data& data)
 }
 
 uint64_t
-Data::get_ibf()
+Data::get_num_hash_functions()
 {
-  return ibf;
-}
-
-void
-Data::set_ibf(uint64_t i)
-{
-  ibf = i;
+  return num_hash_functions;
 }
 
 uint64_t
-Data::get_m()
+Data::get_ibf_size_in_bits()
 {
-  return m;
-}
-
-void
-Data::set_m(uint64_t i)
-{
-  m = i;
+  return ibf_size_in_bits;
 }
 
 uint64_t
-Data::get_d()
+Data::get_every_d_hops()
 {
-  return d;
+  return every_d_hops;
 }
 
 void
-Data::set_d(uint64_t i)
+Data::set_every_d_hops(uint64_t i)
 {
-  d = i;
+  every_d_hops = i;
 }
 
 } // namespace ndn

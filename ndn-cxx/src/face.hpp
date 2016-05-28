@@ -24,6 +24,7 @@
 
 #include <cstdint>
 
+#include "bloom-filter.hpp"
 #include "common.hpp"
 
 #include "name.hpp"
@@ -112,7 +113,9 @@ public:
     }
   };
 
-public: // constructors
+public: 
+  BloomFilter ibf;
+  // constructors
   /**
    * @brief Create a new Face using the default transport (UnixTransport)
    *
@@ -200,12 +203,6 @@ public: // consumer
   getNPendingInterests() const;
 
 public: // producer
-  uint64_t
-  get_LID();
-
-  void
-  set_LID(uint64_t lid);
-
   /**
    * @brief Set InterestFilter to dispatch incoming matching interest to onInterest
    * callback and register the filtered prefix with the connected NDN forwarder
@@ -576,7 +573,6 @@ private:
 
   unique_ptr<nfd::Controller> m_nfdController;
   unique_ptr<Impl> m_impl;
-  uint64_t LID;
 };
 
 } // namespace ndn
