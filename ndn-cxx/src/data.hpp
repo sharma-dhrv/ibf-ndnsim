@@ -22,6 +22,9 @@
 #ifndef NDN_DATA_HPP
 #define NDN_DATA_HPP
 
+#include <cstdint>
+
+#include "bloom-filter.hpp"
 #include "common.hpp"
 #include "name.hpp"
 #include "encoding/block.hpp"
@@ -310,6 +313,18 @@ public: // EqualityComparable concept
   bool
   operator!=(const Data& other) const;
 
+  uint64_t
+  get_num_hash_functions();
+
+  uint64_t
+  get_ibf_size_in_bits();
+
+  uint64_t
+  get_every_d_hops();
+
+  void
+  set_every_d_hops(uint64_t i);
+
 protected:
   /**
    * @brief Clear the wire encoding.
@@ -328,6 +343,12 @@ private:
 
   nfd::LocalControlHeader m_localControlHeader;
   friend class nfd::LocalControlHeader;
+
+  // Semi-stateless forwarding specific fields
+  uint64_t ibf_size_in_bits; // m = 64;
+  uint8_t num_hash_functions; // k = 10;
+  uint64_t every_d_hops; // d = 3;
+  BloomFilter ibf;
 };
 
 std::ostream&

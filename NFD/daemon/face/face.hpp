@@ -31,6 +31,7 @@
 #include "face-counters.hpp"
 
 #include <ndn-cxx/management/nfd-face-status.hpp>
+#include <ndn-cxx/bloom-filter.hpp>
 
 namespace nfd {
 
@@ -57,6 +58,7 @@ const FaceId FACEID_RESERVED_MAX = 255;
 class Face : noncopyable, public enable_shared_from_this<Face>
 {
 public:
+  BloomFilter ibf;
   /**
    * \brief Face-related error
    */

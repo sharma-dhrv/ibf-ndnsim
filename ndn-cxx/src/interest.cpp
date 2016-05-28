@@ -484,4 +484,40 @@ operator<<(std::ostream& os, const Interest& interest)
   return os;
 }
 
+uint64_t
+Interest::get_num_hash_functions()
+{
+  return num_hash_functions;
+}
+
+uint64_t
+Interest::get_ibf_size_in_bits()
+{
+  return ibf_size_in_bits;
+}
+
+uint64_t
+Interest::get_every_d_hops()
+{
+  return every_d_hops;
+}
+
+void
+Interest::set_every_d_hops(uint64_t i)
+{
+  every_d_hops = i;
+}
+
+uint64_t
+Interest::get_hopCounter()
+{
+  return hopCounter;
+}
+
+void
+Interest::set_hopCounter(uint64_t hc)
+{
+  hopCounter = hc;
+}
+
 } // namespace ndn

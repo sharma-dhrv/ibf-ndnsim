@@ -21,8 +21,10 @@
 
 #ifndef NDN_INTEREST_HPP
 #define NDN_INTEREST_HPP
+#include <cstdint>
 
 #include "common.hpp"
+#include "bloom-filter.hpp"
 
 #include "name.hpp"
 #include "selectors.hpp"
@@ -435,6 +437,24 @@ public: // EqualityComparable concept
     return !(*this == other);
   }
 
+  uint64_t
+  get_num_hash_functions();
+
+  uint64_t
+  get_ibf_size_in_bits();
+
+  uint64_t
+  get_every_d_hops();
+
+  void
+  set_every_d_hops(uint64_t i);
+
+  uint64_t
+  get_hopCounter();
+
+  void
+  set_hopCounter(uint64_t hc);
+
 private:
   Name m_name;
   Selectors m_selectors;
@@ -447,6 +467,14 @@ private:
 
   nfd::LocalControlHeader m_localControlHeader;
   friend class nfd::LocalControlHeader;
+
+public:
+  // Semi-stateless forwarding specific fields
+  uint64_t ibf_size_in_bits; // m = 64;
+  uint8_t num_hash_functions; // k = 10;
+  uint64_t every_d_hops; // d = 3;
+  uint64_t hopCounter;
+  BloomFilter ibf;
 };
 
 std::ostream&

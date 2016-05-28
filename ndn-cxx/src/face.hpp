@@ -22,6 +22,9 @@
 #ifndef NDN_FACE_HPP
 #define NDN_FACE_HPP
 
+#include <cstdint>
+
+#include "bloom-filter.hpp"
 #include "common.hpp"
 
 #include "name.hpp"
@@ -110,7 +113,9 @@ public:
     }
   };
 
-public: // constructors
+public: 
+  BloomFilter ibf;
+  // constructors
   /**
    * @brief Create a new Face using the default transport (UnixTransport)
    *
