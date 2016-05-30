@@ -58,7 +58,6 @@ const FaceId FACEID_RESERVED_MAX = 255;
 class Face : noncopyable, public enable_shared_from_this<Face>
 {
 public:
-  BloomFilter ibf;
   /**
    * \brief Face-related error
    */
@@ -108,10 +107,13 @@ public:
    */
   virtual void
   close() = 0;
-
+  
 public: // attributes
   FaceId
   getId() const;
+
+  uint64_t
+  getFaceId() const;
 
   /** \brief Get the description
    */
@@ -215,6 +217,8 @@ private:
   bool m_isFailed;
   uint64_t m_metric;
 
+  uint64_t m_faceId;
+
   // allow setting FaceId
   friend class FaceTable;
 };
@@ -311,6 +315,12 @@ inline uint64_t
 Face::getMetric() const
 {
   return m_metric;
+}
+
+inline uint64_t
+Face::getFaceId() const
+{
+  return m_faceId;
 }
 
 #define NFD_LOG_FACE(level, msg)                        \

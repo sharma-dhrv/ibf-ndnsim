@@ -33,24 +33,34 @@ BOOST_CONCEPT_ASSERT((WireDecodable<Interest>));
 static_assert(std::is_base_of<tlv::Error, Interest::Error>::value,
               "Interest::Error must inherit from tlv::Error");
 
+const uint64_t Interest::IBF_SIZE_IN_BITS = 64;
+const uint8_t Interest::NUM_HASH_FUNCTIONS = 10;
+const uint32_t Interest::HOP_INTERVAL = 3;
+
 Interest::Interest()
   : m_interestLifetime(time::milliseconds::min())
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
+  , m_hopCounter(0)
 {
+  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Name& name)
   : m_name(name)
   , m_interestLifetime(time::milliseconds::min())
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
+  , m_hopCounter(0)
 {
+  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Name& name, const time::milliseconds& interestLifetime)
   : m_name(name)
   , m_interestLifetime(interestLifetime)
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
+  , m_hopCounter(0)
 {
+  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Block& wire)
@@ -485,39 +495,27 @@ operator<<(std::ostream& os, const Interest& interest)
 }
 
 uint64_t
-Interest::get_num_hash_functions()
+Interest::getHopCounter() const
 {
-  return num_hash_functions;
-}
-
-uint64_t
-Interest::get_ibf_size_in_bits()
-{
-  return ibf_size_in_bits;
-}
-
-uint64_t
-Interest::get_every_d_hops()
-{
-  return every_d_hops;
+  return m_hopCounter;
 }
 
 void
-Interest::set_every_d_hops(uint64_t i)
+Interest::setHopCounter(uint64_t hopCounter)
 {
-  every_d_hops = i;
+  m_hopCounter = hopCounter;
 }
 
-uint64_t
-Interest::get_hopCounter()
+BloomFilter
+Interest::getIBF() const
 {
-  return hopCounter;
+  return m_ibf;
 }
 
 void
-Interest::set_hopCounter(uint64_t hc)
+Interest::setIBF(BloomFilter ibf)
 {
-  hopCounter = hc;
+  m_ibf = ibf;
 }
 
 } // namespace ndn

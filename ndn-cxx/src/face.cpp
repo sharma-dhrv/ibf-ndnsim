@@ -19,6 +19,8 @@
  * See AUTHORS.md for complete list of ndn-cxx authors and contributors.
  */
 
+#include <random>
+
 #include "face.hpp"
 
 #include "ns3/log.h"
@@ -55,9 +57,18 @@ Face::construct()
   static ::ndn::KeyChain keyChain("pib-dummy", "tpm-dummy");
 
   m_nfdController.reset(new nfd::Controller(*this, ns3::ndn::StackHelper::getKeyChain()));
+
+  //static boost::random::uniform_int_distribution<uint32_t> dist;
+  //m_faceId = dist(nfd::getGlobalRng());
 }
 
 Face::~Face() = default;
+
+uint64_t
+Face::getFaceId()
+{
+  return m_faceId;
+}
 
 const PendingInterestId*
 Face::expressInterest(const Interest& interest, const OnData& onData, const OnTimeout& onTimeout)

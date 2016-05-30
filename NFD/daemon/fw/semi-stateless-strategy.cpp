@@ -42,24 +42,10 @@ SemiStatelessStrategy::SemiStatelessStrategy(Forwarder& forwarder, const Name& n
 }
 
 static inline bool
-predicate_NextHop_eligible(const shared_ptr<pit::Entry>& pitEntry,
-  const fib::NextHop& nexthop, FaceId currentDownstream,
-  bool wantUnused = false,
-  time::steady_clock::TimePoint now = time::steady_clock::TimePoint::min())
+predicate_PitEntry_canForwardTo_NextHop(shared_ptr<pit::Entry> pitEntry,
+                                        const fib::NextHop& nexthop)
 {
-  shared_ptr<Face> upstream = nexthop.getFace();
-
-  BloomFilter lid = upstream->ibf;
-  BloomFilter ibf = (pitEntry->getInterest()).ibf;
-
-  if (ibf.matchLID(lid))
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return pitEntry->canForwardTo(*nexthop.getFace());
 }
 
 void
@@ -68,21 +54,22 @@ SemiStatelessStrategy::afterReceiveInterest(const Face& inFace,
                                          shared_ptr<fib::Entry> fibEntry,
                                          shared_ptr<pit::Entry> pitEntry)
 {
-  const fib::NextHopList& nexthops = fibEntry->getNextHops();
-  fib::NextHopList::const_iterator it = nexthops.end();
-
-  it = std::find_if(nexthops.begin(), nexthops.end(),
-                    bind(&predicate_NextHop_eligible, pitEntry, _1, inFace.getId(),
-                         true, time::steady_clock::now()));
-  if (it != nexthops.end()) {
-    shared_ptr<Face> outFace = it->getFace();
-    this->sendInterest(pitEntry, outFace);
-    NFD_LOG_DEBUG(interest << " from=" << inFace.getId()
-                           << " retransmit-unused-to=" << outFace->getId());
+  if (pitEntry->hasUnexpiredOutRecords()) {
+    // not a new Interest, don't forward
     return;
-  } else {
-    NFD_LOG_DEBUG("Semi-Stateless Strategy : No upstream face found");
   }
+
+  const fib::NextHopList& nexthops = fibEntry->getNextHops();
+  fib::NextHopList::const_iterator it = std::find_if(nexthops.begin(), nexthops.end(),
+    bind(&predicate_PitEntry_canForwardTo_NextHop, pitEntry, _1));
+
+  if (it == nexthops.end()) {
+    this->rejectPendingInterest(pitEntry);
+    return;
+  }
+
+  shared_ptr<Face> outFace = it->getFace();
+  this->sendInterest(pitEntry, outFace);
 
 }
 

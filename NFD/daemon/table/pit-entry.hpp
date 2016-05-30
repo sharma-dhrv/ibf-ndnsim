@@ -130,7 +130,7 @@ public: // InRecord
    *  \return an iterator to the InRecord
    */
   InRecordCollection::iterator
-  insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest);
+  insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest, bool isShadowRecord);
 
   /** \brief get the InRecord for face
    *  \return an iterator to the InRecord, or .end if it does not exist
@@ -189,7 +189,7 @@ private:
 };
 
 inline bool
-isShadowEntry() const
+Entry::isShadowEntry() const
 {
   return m_shadowEntry;
 }

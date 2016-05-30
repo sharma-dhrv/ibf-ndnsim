@@ -26,6 +26,8 @@
 #include "face.hpp"
 
 #include <ndn-cxx/management/nfd-face-event-notification.hpp>
+#include "core/random.hpp"
+#include <boost/random/uniform_int_distribution.hpp>
 
 namespace nfd {
 
@@ -43,6 +45,8 @@ Face::Face(const FaceUri& remoteUri, const FaceUri& localUri, bool isLocal, bool
   onReceiveData    .connect([this] (const ndn::Data&)     { ++m_counters.getNInDatas(); });
   onSendInterest   .connect([this] (const ndn::Interest&) { ++m_counters.getNOutInterests(); });
   onSendData       .connect([this] (const ndn::Data&)     { ++m_counters.getNOutDatas(); });
+  static boost::random::uniform_int_distribution<uint32_t> dist;
+  m_faceId = dist(nfd::getGlobalRng());
 }
 
 Face::~Face()

@@ -313,17 +313,17 @@ public: // EqualityComparable concept
   bool
   operator!=(const Data& other) const;
 
-  uint64_t
-  get_num_hash_functions();
-
-  uint64_t
-  get_ibf_size_in_bits();
-
-  uint64_t
-  get_every_d_hops();
+  uint32_t
+  getHopCounter() const;
 
   void
-  set_every_d_hops(uint64_t i);
+  setHopCounter(uint32_t hopCounter);
+
+  BloomFilter
+  getIBF() const;
+
+  void
+  setIBF(BloomFilter ibf);
 
 protected:
   /**
@@ -345,10 +345,11 @@ private:
   friend class nfd::LocalControlHeader;
 
   // Semi-stateless forwarding specific fields
-  uint64_t ibf_size_in_bits; // m = 64;
-  uint8_t num_hash_functions; // k = 10;
-  uint64_t every_d_hops; // d = 3;
-  BloomFilter ibf;
+  static const uint64_t IBF_SIZE_IN_BITS; // m = 64;
+  static const uint8_t NUM_HASH_FUNCTIONS; // k = 10;
+  static const uint32_t HOP_INTERVAL; // d = 3;
+  uint32_t m_hopCounter;
+  BloomFilter m_ibf;
 };
 
 std::ostream&

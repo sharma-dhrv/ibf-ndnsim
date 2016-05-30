@@ -32,14 +32,22 @@ BOOST_CONCEPT_ASSERT((WireDecodable<Data>));
 static_assert(std::is_base_of<tlv::Error, Data::Error>::value,
               "Data::Error must inherit from tlv::Error");
 
+const uint64_t Data::IBF_SIZE_IN_BITS = 64;
+const uint8_t Data::NUM_HASH_FUNCTIONS = 10;
+const uint32_t Data::HOP_INTERVAL = 3;
+
 Data::Data()
   : m_content(tlv::Content) // empty content
+  , m_hopCounter(0)
 {
+  m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
 }
 
 Data::Data(const Name& name)
   : m_name(name)
+  , m_hopCounter(0)
 {
+  m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
 }
 
 Data::Data(const Block& wire)
@@ -349,28 +357,28 @@ operator<<(std::ostream& os, const Data& data)
   return os;
 }
 
-uint64_t
-Data::get_num_hash_functions()
+uint32_t
+Data::getHopCounter() const
 {
-  return num_hash_functions;
-}
-
-uint64_t
-Data::get_ibf_size_in_bits()
-{
-  return ibf_size_in_bits;
-}
-
-uint64_t
-Data::get_every_d_hops()
-{
-  return every_d_hops;
+  return m_hopCounter;
 }
 
 void
-Data::set_every_d_hops(uint64_t i)
+Data::setHopCounter(uint32_t hopCounter)
 {
-  every_d_hops = i;
+  m_hopCounter = hopCounter;
+}
+
+BloomFilter
+Data::getIBF() const
+{
+    return m_ibf;
+}
+
+void
+Data::setIBF(BloomFilter ibf)
+{
+    m_ibf = ibf;
 }
 
 } // namespace ndn

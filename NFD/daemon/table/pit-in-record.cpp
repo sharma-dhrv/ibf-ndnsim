@@ -39,5 +39,17 @@ InRecord::update(const Interest& interest)
   m_interest = const_cast<Interest&>(interest).shared_from_this();
 }
 
+void
+InRecord::setShadowRecord(bool shadowRecord)
+{
+  m_shadowRecord = shadowRecord;
+}
+
+void
+InRecord::setIBF(BloomFilter ibf)
+{
+  m_ibf = ibf;
+}
+
 } // namespace pit
 } // namespace nfd

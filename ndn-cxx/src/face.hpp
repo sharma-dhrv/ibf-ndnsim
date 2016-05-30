@@ -24,7 +24,6 @@
 
 #include <cstdint>
 
-#include "bloom-filter.hpp"
 #include "common.hpp"
 
 #include "name.hpp"
@@ -114,7 +113,6 @@ public:
   };
 
 public: 
-  BloomFilter ibf;
   // constructors
   /**
    * @brief Create a new Face using the default transport (UnixTransport)
@@ -527,6 +525,9 @@ public: // producer
   void
   put(const Data& data);
 
+  uint64_t
+  getFaceId();
+
 public: // IO routine
   /**
    * @brief Noop (kept for compatibility)
@@ -573,6 +574,7 @@ private:
 
   unique_ptr<nfd::Controller> m_nfdController;
   unique_ptr<Impl> m_impl;
+  uint64_t m_faceId;
 };
 
 } // namespace ndn

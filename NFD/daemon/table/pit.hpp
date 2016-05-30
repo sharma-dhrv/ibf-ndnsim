@@ -63,7 +63,7 @@ public:
    *  If an entry for exact same name and selectors exists, it returns true.
    *  \return true if an entry exists, false otherwise.
    */
-  std::pair<shared_pair<pit::Entry>, bool>
+  std::pair<shared_ptr<pit::Entry>, bool>
   hasPitEntry(const Interest& interest);
 
   /** \brief inserts a PIT entry for Interest

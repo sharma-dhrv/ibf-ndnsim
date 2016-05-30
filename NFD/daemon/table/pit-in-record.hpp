@@ -46,8 +46,22 @@ public:
   const Interest&
   getInterest() const;
 
+  const bool
+  isShadowRecord() const;
+
+  void
+  setShadowRecord(bool shadowRecord);
+
+  BloomFilter
+  getIBF() const;
+
+  void
+  setIBF(BloomFilter ibf);
+  
 private:
   shared_ptr<const Interest> m_interest;
+  bool m_shadowRecord;
+  BloomFilter m_ibf;
 };
 
 inline const Interest&
@@ -55,6 +69,18 @@ InRecord::getInterest() const
 {
   BOOST_ASSERT(static_cast<bool>(m_interest));
   return *m_interest;
+}
+
+inline const bool
+InRecord::isShadowRecord() const
+{
+  return m_shadowRecord;
+}
+
+inline BloomFilter
+InRecord::getIBF() const
+{
+  return m_ibf;
 }
 
 } // namespace pit

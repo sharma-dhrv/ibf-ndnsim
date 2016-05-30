@@ -71,7 +71,7 @@ Pit::hasPitEntry(const Interest& interest)
   entry.reset();
   
   if (static_cast<bool>(nameTreeEntry)) {
-    const std::vector<shared_ptr<pit::Entry>>& pitEntries = nameTreeEntry->gitPitEntries();
+    const std::vector<shared_ptr<pit::Entry>>& pitEntries = nameTreeEntry->getPitEntries();
     auto it = std::find_if(pitEntries.begin(), pitEntries.end(),
                           [&interest] (const shared_ptr<pit::Entry>& entry) {
                              return entry->getInterest().getName() == interest.getName() &&
@@ -91,7 +91,7 @@ Pit::hasPitEntry(const Interest& interest)
 }
 
 std::pair<shared_ptr<pit::Entry>, bool>
-Pit::insert(const Interest& interest, bool isShadowEntry = false)
+Pit::insert(const Interest& interest, bool isShadowEntry)
 {
   // first lookup() the Interest Name in the NameTree, which will creates all
   // the intermedia nodes, starting from the shortest prefix.
@@ -107,10 +107,13 @@ Pit::insert(const Interest& interest, bool isShadowEntry = false)
                                   entry->getInterest().getSelectors() == interest.getSelectors();
                          });
   if (it != pitEntries.end()) {
+    (*it)->setShadowEntry(isShadowEntry);
     return { *it, false };
   }
 
-  shared_ptr<pit::Entry> entry = make_shared<pit::Entry>(interest, isShadowEntry);
+  shared_ptr<pit::Entry> entry = make_shared<pit::Entry>(interest);
+  entry->setShadowEntry(isShadowEntry);
+
   nameTreeEntry->insertPitEntry(entry);
   m_nItems++;
   return { entry, true };

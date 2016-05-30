@@ -80,25 +80,25 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   // PIT insert
   interest.setHopCounter(interest.getHopCounter() + 1);
   std::pair<shared_ptr<pit::Entry>, bool> entryPair = m_pit.hasPitEntry(interest);
-  bool hasEntry = entryPair.second;
+  //bool hasEntry = entryPair.second;
   shared_ptr<pit::Entry> entry = entryPair.first;
   shared_ptr<pit::Entry> pitEntry;
 
   if (interest.getHopCounter() == 0) {
-	pitEntry = m_pit.insert(interest).first;
+	  pitEntry = m_pit.insert(interest, false).first;
   }
   else {
-	if(static_cast<bool>(entry)) {
-		if(entry->isShadowEntry()) {
-			pitEntry = m_pit.insert(interest, true).first;
-		}
-		else {
-			pitEntry = m_pit.insert(interest).first;
-		}
-	}
-	else {
-		pitEntry = m_pit.insert(interest, true).first;
-	}
+	  if(static_cast<bool>(entry)) {
+		  if(entry->isShadowEntry()) {
+			  pitEntry = m_pit.insert(interest, true).first;
+		  }
+		  else {
+			  pitEntry = m_pit.insert(interest, false).first;
+		  }
+	  }
+	  else {
+		  pitEntry = m_pit.insert(interest, true).first;
+	  }
   }
 
   // detect duplicate Nonce
@@ -148,7 +148,12 @@ Forwarder::onContentStoreMiss(const Face& inFace,
 
   shared_ptr<Face> face = const_pointer_cast<Face>(inFace.shared_from_this());
   // insert InRecord
-  pitEntry->insertOrUpdateInRecord(face, interest);
+  if(pitEntry->isShadowEntry()) {
+    pitEntry->insertOrUpdateInRecord(face, interest, true);
+  }
+  else {
+    pitEntry->insertOrUpdateInRecord(face, interest, false);
+  }
 
   // set PIT unsatisfy timer
   this->setUnsatisfyTimer(pitEntry);
@@ -178,6 +183,9 @@ Forwarder::onContentStoreHit(const Face& inFace,
 
   // set PIT straggler timer
   this->setStragglerTimer(pitEntry, true, data.getFreshnessPeriod());
+
+  //Re-add the interest IBF to data IBF and send back along the reverse path
+  data.setIBF(interest.getIBF());
 
   // goto outgoing Data pipeline
   this->onOutgoingData(data, *const_pointer_cast<Face>(inFace.shared_from_this()));
@@ -253,6 +261,10 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
 
   // insert OutRecord
   pitEntry->insertOrUpdateOutRecord(outFace.shared_from_this(), *interest);
+
+  // update outface in interest's ibf
+  interest->setIBF(BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS));
+  interest->getIBF().add(outFace.getFaceId());
 
   // send Interest
   outFace.sendInterest(*interest);
@@ -340,13 +352,27 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
   shared_ptr<Data> dataCopyWithoutPacket = make_shared<Data>(data);
   dataCopyWithoutPacket->removeTag<ns3::ndn::Ns3PacketTag>();
 
-  // CS insert
-  if (m_csFromNdnSim == nullptr)
-    m_cs.insert(*dataCopyWithoutPacket);
-  else
-    m_csFromNdnSim->Add(dataCopyWithoutPacket);
+  // look if atleast one pitentry is non-shadow then allow cs insert else not.
 
-  std::set<shared_ptr<Face> > pendingDownstreams;
+  bool hasNonShadowEntries = false;
+  for (const shared_ptr<pit::Entry>& pitEntry : pitMatches) {
+    if(!pitEntry->isShadowEntry()) {
+      hasNonShadowEntries = true;
+      break;
+    }
+  }
+
+  // CS insert
+  if(hasNonShadowEntries) {
+    if (m_csFromNdnSim == nullptr)
+      m_cs.insert(*dataCopyWithoutPacket);
+    else
+      m_csFromNdnSim->Add(dataCopyWithoutPacket);
+  }
+
+  std::vector<shared_ptr<Face> > pendingDownstreams;
+  std::vector<shared_ptr<Face> > pendingShadowDownstreams;
+  std::vector<BloomFilter> pendingDownstreamIBFs;
   // foreach PitEntry
   for (const shared_ptr<pit::Entry>& pitEntry : pitMatches) {
     NFD_LOG_DEBUG("onIncomingData matching=" << pitEntry->getName());
@@ -359,7 +385,24 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
     for (pit::InRecordCollection::const_iterator it = inRecords.begin();
                                                  it != inRecords.end(); ++it) {
       if (it->getExpiry() > time::steady_clock::now()) {
-        pendingDownstreams.insert(it->getFace());
+        /* add downstream based on if it is a shadow entry
+         * if shadow then iterate ovr facetable to find mathcing faces using,
+         * for (Face& face : ndn->getForwarder()->getFaceTable()) {
+         *  // Face match in bloom filter of data packet here if shadow entry and add face to pendingDownstream
+         * else if normal pit entry keep a record of pitEntry interest packets bloom filters and face in some vector
+         * and record face in pendingDownstream.
+         * Make InRecords also shadow and non-shadow. think of cases with multicast branches with different hop counters
+         * }
+         * add a merge(BloomFilter) to the BloomFilter class to merge another bloomfilter
+         */
+        if(it->isShadowRecord()) {
+            if(data.getIBF().possiblyContains(it->getFace()->getFaceId())) {
+              pendingShadowDownstreams.push_back(it->getFace());
+            }
+        } else {
+          pendingDownstreams.push_back(it->getFace());
+          pendingDownstreamIBFs.push_back(it->getIBF());
+        }
       }
     }
 
@@ -380,12 +423,27 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
   }
 
   // foreach pending downstream
-  for (std::set<shared_ptr<Face> >::iterator it = pendingDownstreams.begin();
-      it != pendingDownstreams.end(); ++it) {
+  for (std::vector<shared_ptr<Face> >::iterator it = pendingShadowDownstreams.begin();
+      it != pendingShadowDownstreams.end(); ++it) {
+    shared_ptr<Face> pendingShadowDownstream = *it;
+    if (pendingShadowDownstream.get() == &inFace) {
+      continue;
+    }
+    // goto outgoing Data pipeline
+    this->onOutgoingData(data, *pendingShadowDownstream);
+  }
+
+  std::vector<shared_ptr<Face> >::iterator it = pendingDownstreams.begin();
+  std::vector<BloomFilter>::iterator ibf_it = pendingDownstreamIBFs.begin();
+
+  for ( ; it != pendingDownstreams.end() && ibf_it != pendingDownstreamIBFs.end(); ++it, ++ibf_it) {
     shared_ptr<Face> pendingDownstream = *it;
+    BloomFilter ibf = *ibf_it;
     if (pendingDownstream.get() == &inFace) {
       continue;
     }
+    //set IBF of the reverse subpath from the corresponding interest(s)
+    data.setIBF(ibf);
     // goto outgoing Data pipeline
     this->onOutgoingData(data, *pendingDownstream);
   }

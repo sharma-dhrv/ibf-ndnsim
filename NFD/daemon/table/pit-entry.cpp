@@ -39,7 +39,7 @@ Entry::Entry(const Interest& interest)
 }
 
 void
-setShadowEntry(bool shadowEntry)
+Entry::setShadowEntry(bool shadowEntry)
 {
   m_shadowEntry = shadowEntry;
 }
@@ -135,16 +135,24 @@ Entry::findNonce(uint32_t nonce, const Face& face) const
 }
 
 InRecordCollection::iterator
-Entry::insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest)
+Entry::insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest, bool isShadowRecord=false)
 {
+  bool newRecord = false;
   auto it = std::find_if(m_inRecords.begin(), m_inRecords.end(),
     [&face] (const InRecord& inRecord) { return inRecord.getFace() == face; });
   if (it == m_inRecords.end()) {
     m_inRecords.emplace_front(face);
     it = m_inRecords.begin();
+    newRecord = true;
   }
 
   it->update(interest);
+  it->setShadowRecord(isShadowRecord);
+  if(newRecord) {
+    it->setIBF(BloomFilter::merge(it->getIBF(), interest.getIBF()));
+  } else {
+    it->setIBF(interest.getIBF());
+  }
   return it;
 }
 
