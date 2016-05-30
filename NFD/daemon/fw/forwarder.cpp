@@ -78,7 +78,7 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   }
 
   // PIT insert
-  interest.setHopCounter(interest.getHopCounter() + 1);
+  const_cast<Interest&>(interest).setHopCounter(interest.getHopCounter() + 1);
   std::pair<shared_ptr<pit::Entry>, bool> entryPair = m_pit.hasPitEntry(interest);
   //bool hasEntry = entryPair.second;
   shared_ptr<pit::Entry> entry = entryPair.first;
@@ -185,7 +185,7 @@ Forwarder::onContentStoreHit(const Face& inFace,
   this->setStragglerTimer(pitEntry, true, data.getFreshnessPeriod());
 
   //Re-add the interest IBF to data IBF and send back along the reverse path
-  data.setIBF(interest.getIBF());
+  const_cast<Data&>(data).setIBF(interest.getIBF());
 
   // goto outgoing Data pipeline
   this->onOutgoingData(data, *const_pointer_cast<Face>(inFace.shared_from_this()));
@@ -443,7 +443,7 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
       continue;
     }
     //set IBF of the reverse subpath from the corresponding interest(s)
-    data.setIBF(ibf);
+    const_cast<Data&>(data).setIBF(ibf);
     // goto outgoing Data pipeline
     this->onOutgoingData(data, *pendingDownstream);
   }

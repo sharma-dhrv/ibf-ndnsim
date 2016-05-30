@@ -4,6 +4,13 @@
 #include "murmur3.hpp"
 
 #include "ns3/log.h"
+
+#include <type_traits>
+
+#include <boost/concept/assert.hpp>
+#include <boost/concept_check.hpp>
+#include <type_traits>
+
 NS_LOG_COMPONENT_DEFINE("ndn-cxx.BloomFilter");
 
 using namespace std;
@@ -35,11 +42,11 @@ inline uint64_t nthHash(uint8_t n, uint64_t hashA, uint64_t hashB, uint64_t filt
 
 void BloomFilter::add(uint64_t data) 
 {
-  std::array<uint8_t, 8> data_array {0, 0, 0, 0, 0, 0, 0, 0}
+  std::array<uint8_t, 8> data_array {0, 0, 0, 0, 0, 0, 0, 0};
   for(int i = 0; i < 8; i++) {
     data_array[i] = ((data >> (i*8)) & 0x00FF);
   }
-  auto hashValues = hashbf(data_array.data(), len);
+  auto hashValues = hashbf(data_array.data(), 8);
 
   for (int n = 0; n < m_numHashes; n++) 
   {
@@ -49,11 +56,11 @@ void BloomFilter::add(uint64_t data)
 
 bool BloomFilter::possiblyContains(uint64_t data) const 
 {
-  std::array<uint8_t, 8> data_array {0, 0, 0, 0, 0, 0, 0, 0}
+  std::array<uint8_t, 8> data_array {0, 0, 0, 0, 0, 0, 0, 0};
   for(int i = 0; i < 8; i++) {
     data_array[i] = ((data >> (i*8)) & 0x00FF);
   }
-  auto hashValues = hashbf(data_array.data(), len);
+  auto hashValues = hashbf(data_array.data(), 8);
 
   for (int n = 0; n < m_numHashes; n++) 
   {
@@ -76,15 +83,16 @@ BloomFilter::merge(BloomFilter b1, BloomFilter b2)
   std::vector<bool> ibf2 = b2.m_bits;
 
   uint64_t ibf1Size = ibf1.size();
-  uint64_t ibf2Size = ibf2.size();
+  //uint64_t ibf2Size = ibf2.size();
 
-  BloomFilter mergedBF = BloomFilter(ibf1Size, b1.getNumHashes());
-  
-    if (ibf1Size != ibf2Size)
+  /*BOOST_ASSERT(ibf1Size != ibf2Size);
   {
     NS_LOG_INFO("Bloom filters to be compared are of different length");
     return false;
-  }
+  }*/
+
+
+  BloomFilter mergedBF = BloomFilter(ibf1Size, b1.getNumHashes());
 
   std::vector<bool>::iterator ibf1_it = ibf1.begin();
   std::vector<bool>::iterator ibf2_it = ibf2.begin();
