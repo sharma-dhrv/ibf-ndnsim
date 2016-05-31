@@ -169,6 +169,12 @@ public: // OutRecord
   bool
   hasUnexpiredOutRecords() const;
 
+  BloomFilter
+  getLatestIBF() const;
+
+  void
+  setLatestIBF(BloomFilter ibf);
+
 public:
   scheduler::EventId m_unsatisfyTimer;
   scheduler::EventId m_stragglerTimer;
@@ -178,6 +184,7 @@ private:
   InRecordCollection m_inRecords;
   OutRecordCollection m_outRecords;
   bool m_shadowEntry;
+  BloomFilter m_latestIBF;
 
   static const Name LOCALHOST_NAME;
   static const Name LOCALHOP_NAME;
@@ -192,6 +199,12 @@ inline bool
 Entry::isShadowEntry() const
 {
   return m_shadowEntry;
+}
+
+inline BloomFilter
+Entry::getLatestIBF() const
+{
+  return m_latestIBF;
 }
 
 inline const Interest&

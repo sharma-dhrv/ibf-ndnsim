@@ -62,8 +62,8 @@ void
 Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 {
   // receive Interest
-  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
-                " interest=" << interest.getName());
+  //NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
+  //              " interest=" << interest.getName());
   const_cast<Interest&>(interest).setIncomingFaceId(inFace.getId());
   ++m_counters.getNInInterests();
 
@@ -78,7 +78,10 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   }
 
   // PIT insert
-  const_cast<Interest&>(interest).setHopCounter(interest.getHopCounter() + 1);
+  const_cast<Interest&>(interest).setHopCounter((interest.getHopCounter() + 1) % Interest::HOP_INTERVAL);
+  BloomFilter ibf = const_cast<Interest&>(interest).getIBF();
+  ibf.add(inFace.getFaceId());
+  const_cast<Interest&>(interest).setIBF(ibf);
   std::pair<shared_ptr<pit::Entry>, bool> entryPair = m_pit.hasPitEntry(interest);
   //bool hasEntry = entryPair.second;
   shared_ptr<pit::Entry> entry = entryPair.first;
@@ -100,6 +103,9 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 		  pitEntry = m_pit.insert(interest, true).first;
 	  }
   }
+
+  NFD_LOG_DEBUG("IBF: onIncomingInterest faceId=" << inFace.getFaceId() <<
+                        " interestIBF=" << interest.getIBF().toString() << " hopCounter=" << interest.getHopCounter());
 
   // detect duplicate Nonce
   int dnw = pitEntry->findNonce(interest.getNonce(), inFace);
@@ -235,8 +241,8 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
     NFD_LOG_WARN("onOutgoingInterest face=invalid interest=" << pitEntry->getName());
     return;
   }
-  NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() <<
-                " interest=" << pitEntry->getName());
+  //NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() <<
+  //             " interest=" << pitEntry->getName());
 
   // scope control
   if (pitEntry->violatesScope(outFace)) {
@@ -259,12 +265,17 @@ Forwarder::onOutgoingInterest(shared_ptr<pit::Entry> pitEntry, Face& outFace,
     interest->setNonce(dist(getGlobalRng()));
   }
 
+  interest->setIBF(pitEntry->getLatestIBF());
+  
+  NFD_LOG_DEBUG("onOutgoingInterest faceId=" << outFace.getFaceId() <<
+                " interest=" << interest->getIBF().toString());
+
   // insert OutRecord
   pitEntry->insertOrUpdateOutRecord(outFace.shared_from_this(), *interest);
 
   // update outface in interest's ibf
-  interest->setIBF(BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS));
-  interest->getIBF().add(outFace.getFaceId());
+  //interest->setIBF(BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS));
+  //interest->getIBF().add(outFace.getFaceId());
 
   // send Interest
   outFace.sendInterest(*interest);

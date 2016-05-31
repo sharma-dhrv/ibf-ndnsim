@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstdint>
+#include <string>
 
 class BloomFilter {
 public:
@@ -17,6 +18,9 @@ public:
   uint8_t getNumHashes();
   void setSize(uint64_t s);
   void setNumHashes(uint8_t n);
+  uint64_t getValue();
+  void setValue(uint64_t value);
+  std::string toString();
 
 private:
   uint8_t m_numHashes;

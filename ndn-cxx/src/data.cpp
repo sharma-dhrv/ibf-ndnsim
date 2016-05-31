@@ -38,16 +38,16 @@ const uint32_t Data::HOP_INTERVAL = 3;
 
 Data::Data()
   : m_content(tlv::Content) // empty content
-  , m_hopCounter(0)
+  , m_ibf(0)
 {
-  m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
+  //m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
 }
 
 Data::Data(const Name& name)
   : m_name(name)
-  , m_hopCounter(0)
+  , m_ibf(0)
 {
-  m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
+  //m_ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
 }
 
 Data::Data(const Block& wire)
@@ -66,8 +66,13 @@ Data::wireEncode(EncodingImpl<TAG>& encoder, bool unsignedPortion/* = false*/) c
   //            MetaInfo
   //            Content
   //            Signature
+  //            IBF
 
-  // (reverse encoding)
+  // (reverse encoding) 
+
+  //IBF
+  getIBF(); // ensures m_ibf is properly set
+  totalLength += encoder.prependBlock(m_ibf);
 
   if (!unsignedPortion && !m_signature)
     {
@@ -151,6 +156,7 @@ Data::wireDecode(const Block& wire)
   //            MetaInfo
   //            Content
   //            Signature
+  //            IBF
 
   // Name
   m_name.wireDecode(m_wire.get(tlv::Name));
@@ -172,6 +178,9 @@ Data::wireDecode(const Block& wire)
   Block::element_const_iterator val = m_wire.find(tlv::SignatureValue);
   if (val != m_wire.elements_end())
     m_signature.setValue(*val);
+
+  //IBF
+  m_ibf = m_wire.get(tlv::IBF);
 }
 
 Data&
@@ -357,28 +366,41 @@ operator<<(std::ostream& os, const Data& data)
   return os;
 }
 
-uint32_t
-Data::getHopCounter() const
-{
-  return m_hopCounter;
-}
-
-void
-Data::setHopCounter(uint32_t hopCounter)
-{
-  m_hopCounter = hopCounter;
-}
-
 BloomFilter
 Data::getIBF() const
 {
-    return m_ibf;
+  if (!m_ibf.hasWire())
+    const_cast<Data*>(this)->setIBF(BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS));
+
+  uint64_t value = 0;
+  if (m_ibf.value_size() == sizeof(uint64_t))
+    value = *reinterpret_cast<const uint64_t*>(m_ibf.value());
+  else {
+    // for compatibility reasons.  Should be removed eventually
+    value = readNonNegativeInteger(m_ibf);
+  }
+
+  BloomFilter ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
+  ibf.setValue(value);
+  return ibf;
 }
 
-void
+Data&
 Data::setIBF(BloomFilter ibf)
 {
-    m_ibf = ibf;
+  onChanged();
+
+  uint64_t ibfValue = ibf.getValue();
+  if (m_wire.hasWire() && m_ibf.value_size() == sizeof(uint64_t)) {
+    std::memcpy(const_cast<uint8_t*>(m_ibf.value()), &ibfValue, sizeof(ibfValue));
+  }
+  else {
+    m_ibf = makeBinaryBlock(tlv::IBF,
+                              reinterpret_cast<const uint8_t*>(&ibfValue),
+                              sizeof(ibfValue));
+    m_wire.reset();
+  }
+  return *this;
 }
 
 } // namespace ndn

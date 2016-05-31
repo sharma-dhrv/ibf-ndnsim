@@ -148,3 +148,44 @@ bool BloomFilter::matchLID(BloomFilter b)
 
   return true;
 }
+
+uint64_t
+BloomFilter::getValue()
+{
+  uint64_t value = 0;
+  for(uint64_t i = m_bits.size()-1; i > 0; i--) {
+    value = value << 1;
+    if(m_bits[i])
+      value = value | 0x01;
+  }
+
+  return value;
+}
+
+void
+BloomFilter::setValue(uint64_t value)
+{
+  for(uint64_t i = 0; i < m_bits.size()-1 ; i++) {
+    if((value & 0x01) > 0)
+      m_bits[i] = true;
+    else
+      m_bits[i] = false;
+    value = value >> 1;
+
+  }
+}
+
+std::string BloomFilter::toString()
+{
+  std::string str;
+  str.append("[");
+  for(uint64_t i = 0; i < m_bits.size(); i++) {
+    str.append((m_bits[i] ? "1" : "0"));
+    if(i < m_bits.size()-1)
+      str.append(", ");
+  }
+
+  str.append("]");
+
+  return str;
+}

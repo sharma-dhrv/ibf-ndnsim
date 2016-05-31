@@ -192,8 +192,11 @@ Consumer::SendPacket()
   time::milliseconds interestLifeTime(m_interestLifeTime.GetMilliSeconds());
   interest->setInterestLifetime(interestLifeTime);
 
+  //interest->getIBF().add(m_face.getFaceId());
+
   // NS_LOG_INFO ("Requesting Interest: \n" << *interest);
   NS_LOG_INFO("> Interest for " << seq);
+  //NS_LOG_INFO("> Interest IBF: " << interest->getIBF().toString());
 
   WillSendOutInterest(seq);
 

@@ -437,16 +437,28 @@ public: // EqualityComparable concept
     return !(*this == other);
   }
 
-  uint64_t
+  bool
+  hasHopCounter() const
+  {
+    return m_hopCounter.hasWire();
+  }
+  
+  uint32_t
   getHopCounter() const;
 
-  void
-  setHopCounter(uint64_t hopCounter);
+  Interest&
+  setHopCounter(uint32_t hopCounter);
+
+  bool
+  hasIBF() const
+  {
+    return m_ibf.hasWire();
+  }
 
   BloomFilter
   getIBF() const;
 
-  void
+  Interest&
   setIBF(BloomFilter ibf);
 
 private:
@@ -467,8 +479,8 @@ public:
   static const uint64_t IBF_SIZE_IN_BITS; // m = 64;
   static const uint8_t NUM_HASH_FUNCTIONS; // k = 10;
   static const uint32_t HOP_INTERVAL; // d = 3;
-  uint32_t m_hopCounter;
-  BloomFilter m_ibf;
+  mutable Block m_hopCounter;
+  mutable Block m_ibf;
 };
 
 std::ostream&

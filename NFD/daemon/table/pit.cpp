@@ -108,11 +108,13 @@ Pit::insert(const Interest& interest, bool isShadowEntry)
                          });
   if (it != pitEntries.end()) {
     (*it)->setShadowEntry(isShadowEntry);
+    (*it)->setLatestIBF(interest.getIBF());
     return { *it, false };
   }
 
   shared_ptr<pit::Entry> entry = make_shared<pit::Entry>(interest);
   entry->setShadowEntry(isShadowEntry);
+  entry->setLatestIBF(interest.getIBF());
 
   nameTreeEntry->insertPitEntry(entry);
   m_nItems++;

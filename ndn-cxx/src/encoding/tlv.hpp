@@ -88,6 +88,9 @@ enum {
   LinkDelegation = 31,
   SelectedDelegation = 32,
 
+  HopCounter = 40,
+  IBF = 41,
+
   AppPrivateBlock1 = 128,
   AppPrivateBlock2 = 32767
 };

@@ -44,6 +44,12 @@ Entry::setShadowEntry(bool shadowEntry)
   m_shadowEntry = shadowEntry;
 }
 
+void
+Entry::setLatestIBF(BloomFilter ibf)
+{
+  m_latestIBF = ibf;
+}
+
 const Name&
 Entry::getName() const
 {

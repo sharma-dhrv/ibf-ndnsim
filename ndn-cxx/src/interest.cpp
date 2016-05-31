@@ -41,8 +41,9 @@ Interest::Interest()
   : m_interestLifetime(time::milliseconds::min())
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
   , m_hopCounter(0)
+  , m_ibf(0)
 {
-  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
+  //m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Name& name)
@@ -50,8 +51,9 @@ Interest::Interest(const Name& name)
   , m_interestLifetime(time::milliseconds::min())
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
   , m_hopCounter(0)
+  , m_ibf(0)
 {
-  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
+  //m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Name& name, const time::milliseconds& interestLifetime)
@@ -59,8 +61,9 @@ Interest::Interest(const Name& name, const time::milliseconds& interestLifetime)
   , m_interestLifetime(interestLifetime)
   , m_selectedDelegationIndex(INVALID_SELECTED_DELEGATION_INDEX)
   , m_hopCounter(0)
+  , m_ibf(0)
 {
-  m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
+  //m_ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
 }
 
 Interest::Interest(const Block& wire)
@@ -235,8 +238,19 @@ Interest::wireEncode(EncodingImpl<TAG>& encoder) const
   //                InterestLifetime?
   //                Link?
   //                SelectedDelegation?
+  //                HopCounter
+  //                IBF
 
   // (reverse encoding)
+  
+  //IBF
+  getIBF(); // ensures m_ibf is properly set
+  totalLength += encoder.prependBlock(m_ibf);
+
+  //HopCounter
+  getHopCounter(); // ensures m_hopCounter is properly set
+  totalLength += encoder.prependBlock(m_hopCounter);
+
 
   if (hasLink()) {
     if (hasSelectedDelegation()) {
@@ -314,6 +328,8 @@ Interest::wireDecode(const Block& wire)
   //                InterestLifetime?
   //                Link?
   //                SelectedDelegation?
+  //                HopCounter
+  //                IBF
 
   if (m_wire.type() != tlv::Interest)
     BOOST_THROW_EXCEPTION(Error("Unexpected TLV number when decoding Interest"));
@@ -365,6 +381,12 @@ Interest::wireDecode(const Block& wire)
       BOOST_THROW_EXCEPTION(Error("Invalid selected delegation index when decoding Interest"));
     }
   }
+
+  //HopCounter
+  m_hopCounter = m_wire.get(tlv::HopCounter);
+  
+  //IBF
+  m_ibf = m_wire.get(tlv::IBF);
 }
 
 bool
@@ -494,28 +516,68 @@ operator<<(std::ostream& os, const Interest& interest)
   return os;
 }
 
-uint64_t
+uint32_t
 Interest::getHopCounter() const
 {
-  return m_hopCounter;
+  if (!m_hopCounter.hasWire())
+    const_cast<Interest*>(this)->setHopCounter(0);
+
+  if (m_hopCounter.value_size() == sizeof(uint32_t))
+    return *reinterpret_cast<const uint32_t*>(m_hopCounter.value());
+  else {
+    // for compatibility reasons.  Should be removed eventually
+    return readNonNegativeInteger(m_hopCounter);
+  }
 }
 
-void
-Interest::setHopCounter(uint64_t hopCounter)
+Interest&
+Interest::setHopCounter(uint32_t hopCounter)
 {
-  m_hopCounter = hopCounter;
+  if (m_wire.hasWire() && m_hopCounter.value_size() == sizeof(uint32_t)) {
+    std::memcpy(const_cast<uint8_t*>(m_hopCounter.value()), &hopCounter, sizeof(hopCounter));
+  }
+  else {
+    m_hopCounter = makeBinaryBlock(tlv::HopCounter,
+                              reinterpret_cast<const uint8_t*>(&hopCounter),
+                              sizeof(hopCounter));
+    m_wire.reset();
+  }
+  return *this;
 }
 
 BloomFilter
 Interest::getIBF() const
 {
-  return m_ibf;
+  if (!m_ibf.hasWire())
+    const_cast<Interest*>(this)->setIBF(BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS));
+
+  uint64_t value = 0;
+  if (m_ibf.value_size() == sizeof(uint64_t))
+    value = *reinterpret_cast<const uint64_t*>(m_ibf.value());
+  else {
+    // for compatibility reasons.  Should be removed eventually
+    value = readNonNegativeInteger(m_ibf);
+  }
+
+  BloomFilter ibf = BloomFilter(Interest::IBF_SIZE_IN_BITS, Interest::NUM_HASH_FUNCTIONS);
+  ibf.setValue(value);
+  return ibf;
 }
 
-void
+Interest&
 Interest::setIBF(BloomFilter ibf)
 {
-  m_ibf = ibf;
+  uint64_t ibfValue = ibf.getValue();
+  if (m_wire.hasWire() && m_ibf.value_size() == sizeof(uint64_t)) {
+    std::memcpy(const_cast<uint8_t*>(m_ibf.value()), &ibfValue, sizeof(ibfValue));
+  }
+  else {
+    m_ibf = makeBinaryBlock(tlv::IBF,
+                              reinterpret_cast<const uint8_t*>(&ibfValue),
+                              sizeof(ibfValue));
+    m_wire.reset();
+  }
+  return *this;
 }
 
 } // namespace ndn
