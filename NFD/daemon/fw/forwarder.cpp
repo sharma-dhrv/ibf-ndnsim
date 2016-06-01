@@ -32,6 +32,7 @@
 #include "utils/ndn-ns3-packet-tag.hpp"
 
 #include <boost/random/uniform_int_distribution.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace nfd {
 
@@ -48,14 +49,27 @@ Forwarder::Forwarder()
   , m_measurements(m_nameTree)
   , m_strategyChoice(m_nameTree, fw::makeDefaultStrategy(*this))
   , m_csFace(make_shared<NullFace>(FaceUri("contentstore://")))
+  , randRealDist(0.0, (double)Interest::HOP_INTERVAL)
+  , totalInterests(0)
+  , overheadInterests(0)
 {
   fw::installStrategies(*this);
   getFaceTable().addReserved(m_csFace, FACEID_CONTENT_STORE);
+
+  boost::random::uniform_int_distribution<uint32_t> dist;
+  suffix = dist(getGlobalRng());
 }
 
 Forwarder::~Forwarder()
 {
 
+}
+
+uint32_t genNameHash(Name name, uint32_t suffix)
+{
+  return (uint32_t)((boost::hash_range(name.wireEncode().wire(),
+          name.wireEncode().wire() +
+          name.wireEncode().size()) + suffix) % Interest::HOP_INTERVAL);
 }
 
 void
@@ -86,14 +100,31 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   //bool hasEntry = entryPair.second;
   shared_ptr<pit::Entry> entry = entryPair.first;
   shared_ptr<pit::Entry> pitEntry;
+  Name name = interest.getName();
 
+  totalInterests++;
+
+  /*
+  // Name Hash-based scheme
+  if ( genNameHash(name, suffix) == 0) {
+  */
+
+  /*
+  // Probabalistic scheme
+  if (randRealDist(getGlobalRng()) < Interest::HOP_INTERVAL || interest.getHopCounter() == 0) {
+  */
+
+  
+  // Hop Counter scheme
   if (interest.getHopCounter() == 0) {
+  
 	  pitEntry = m_pit.insert(interest, false).first;
   }
   else {
 	  if(static_cast<bool>(entry)) {
 		  if(entry->isShadowEntry()) {
 			  pitEntry = m_pit.insert(interest, true).first;
+        overheadInterests++;
 		  }
 		  else {
 			  pitEntry = m_pit.insert(interest, false).first;
@@ -101,6 +132,7 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 	  }
 	  else {
 		  pitEntry = m_pit.insert(interest, true).first;
+      overheadInterests++;
 	  }
   }
 
@@ -191,7 +223,7 @@ Forwarder::onContentStoreHit(const Face& inFace,
   this->setStragglerTimer(pitEntry, true, data.getFreshnessPeriod());
 
   //Re-add the interest IBF to data IBF and send back along the reverse path
-  const_cast<Data&>(data).setIBF(interest.getIBF());
+  //const_cast<Data&>(data).setIBF(interest.getIBF());
 
   // goto outgoing Data pipeline
   this->onOutgoingData(data, *const_pointer_cast<Face>(inFace.shared_from_this()));
@@ -382,8 +414,8 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
   }
 
   std::vector<shared_ptr<Face> > pendingDownstreams;
-  std::vector<shared_ptr<Face> > pendingShadowDownstreams;
-  std::vector<BloomFilter> pendingDownstreamIBFs;
+  //std::vector<shared_ptr<Face> > pendingShadowDownstreams;
+  //std::vector<BloomFilter> pendingDownstreamIBFs;
   // foreach PitEntry
   for (const shared_ptr<pit::Entry>& pitEntry : pitMatches) {
     NFD_LOG_DEBUG("onIncomingData matching=" << pitEntry->getName());
@@ -406,14 +438,14 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
          * }
          * add a merge(BloomFilter) to the BloomFilter class to merge another bloomfilter
          */
-        if(it->isShadowRecord()) {
-            if(data.getIBF().possiblyContains(it->getFace()->getFaceId())) {
-              pendingShadowDownstreams.push_back(it->getFace());
-            }
-        } else {
+        //if(it->isShadowRecord()) {
+        //    if(data.getIBF().possiblyContains(it->getFace()->getFaceId())) {
+        //      pendingShadowDownstreams.push_back(it->getFace());
+        //    }
+        //} else {
           pendingDownstreams.push_back(it->getFace());
-          pendingDownstreamIBFs.push_back(it->getIBF());
-        }
+        //  pendingDownstreamIBFs.push_back(it->getIBF());
+        //}
       }
     }
 
@@ -433,6 +465,7 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
     this->setStragglerTimer(pitEntry, true, data.getFreshnessPeriod());
   }
 
+  /*
   // foreach pending downstream
   for (std::vector<shared_ptr<Face> >::iterator it = pendingShadowDownstreams.begin();
       it != pendingShadowDownstreams.end(); ++it) {
@@ -443,7 +476,20 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
     // goto outgoing Data pipeline
     this->onOutgoingData(data, *pendingShadowDownstream);
   }
+  */
 
+
+  for (std::vector<shared_ptr<Face> >::iterator it = pendingDownstreams.begin();
+      it != pendingDownstreams.end(); ++it) {
+    shared_ptr<Face> pendingDownstream = *it;
+    if (pendingDownstream.get() == &inFace) {
+      continue;
+    }
+    // goto outgoing Data pipeline
+    this->onOutgoingData(data, *pendingDownstream);
+  }
+  
+  /*
   std::vector<shared_ptr<Face> >::iterator it = pendingDownstreams.begin();
   std::vector<BloomFilter>::iterator ibf_it = pendingDownstreamIBFs.begin();
 
@@ -458,6 +504,7 @@ Forwarder::onIncomingData(Face& inFace, const Data& data)
     // goto outgoing Data pipeline
     this->onOutgoingData(data, *pendingDownstream);
   }
+  */
 }
 
 void

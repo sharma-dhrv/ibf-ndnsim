@@ -39,6 +39,8 @@
 
 #include "ns3/ndnSIM/model/cs/ndn-content-store.hpp"
 
+#include <boost/random/uniform_real_distribution.hpp>
+
 namespace nfd {
 
 namespace fw {
@@ -236,6 +238,13 @@ private:
 
   // allow Strategy (base class) to enter pipelines
   friend class fw::Strategy;
+
+  boost::random::uniform_real_distribution<> randRealDist;
+  uint32_t suffix;
+
+public:
+  uint32_t totalInterests;
+  uint32_t overheadInterests;
 };
 
 inline const ForwarderCounters&

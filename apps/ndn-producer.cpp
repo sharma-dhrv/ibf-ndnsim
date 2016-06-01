@@ -124,8 +124,8 @@ Producer::OnInterest(shared_ptr<const Interest> interest)
 
   data->setSignature(signature);
 
-  NS_LOG_INFO("Received Interest with IBF " << interest->getIBF().toString() << " for name " << data->getName());
-  data->setIBF(interest->getIBF());
+  //NS_LOG_INFO("Received Interest with IBF " << interest->getIBF().toString() << " for name " << data->getName());
+  //data->setIBF(interest->getIBF());
 
   NS_LOG_INFO("node(" << GetNode()->GetId() << ") responding with Data: " << data->getName());
 

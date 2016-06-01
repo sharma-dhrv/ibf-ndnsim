@@ -70,10 +70,6 @@ Data::wireEncode(EncodingImpl<TAG>& encoder, bool unsignedPortion/* = false*/) c
 
   // (reverse encoding) 
 
-  //IBF
-  getIBF(); // ensures m_ibf is properly set
-  totalLength += encoder.prependBlock(m_ibf);
-
   if (!unsignedPortion && !m_signature)
     {
       BOOST_THROW_EXCEPTION(Error("Requested wire format, but data packet has not been signed yet"));
@@ -87,6 +83,10 @@ Data::wireEncode(EncodingImpl<TAG>& encoder, bool unsignedPortion/* = false*/) c
 
   // SignatureInfo
   totalLength += encoder.prependBlock(m_signature.getInfo());
+
+  //IBF
+  //getIBF(); // ensures m_ibf is properly set
+  //totalLength += encoder.prependBlock(m_ibf);
 
   // Content
   totalLength += encoder.prependBlock(getContent());
@@ -167,6 +167,9 @@ Data::wireDecode(const Block& wire)
   // Content
   m_content = m_wire.get(tlv::Content);
 
+  //IBF
+  //m_ibf = m_wire.get(tlv::IBF);
+
   ///////////////
   // Signature //
   ///////////////
@@ -178,9 +181,6 @@ Data::wireDecode(const Block& wire)
   Block::element_const_iterator val = m_wire.find(tlv::SignatureValue);
   if (val != m_wire.elements_end())
     m_signature.setValue(*val);
-
-  //IBF
-  m_ibf = m_wire.get(tlv::IBF);
 }
 
 Data&
@@ -369,6 +369,7 @@ operator<<(std::ostream& os, const Data& data)
 BloomFilter
 Data::getIBF() const
 {
+  /*
   if (!m_ibf.hasWire())
     const_cast<Data*>(this)->setIBF(BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS));
 
@@ -379,7 +380,9 @@ Data::getIBF() const
     // for compatibility reasons.  Should be removed eventually
     value = readNonNegativeInteger(m_ibf);
   }
+  */
 
+  uint64_t value = 0;
   BloomFilter ibf = BloomFilter(Data::IBF_SIZE_IN_BITS, Data::NUM_HASH_FUNCTIONS);
   ibf.setValue(value);
   return ibf;
@@ -388,18 +391,20 @@ Data::getIBF() const
 Data&
 Data::setIBF(BloomFilter ibf)
 {
+  /*
   onChanged();
 
   uint64_t ibfValue = ibf.getValue();
-  if (m_wire.hasWire() && m_ibf.value_size() == sizeof(uint64_t)) {
-    std::memcpy(const_cast<uint8_t*>(m_ibf.value()), &ibfValue, sizeof(ibfValue));
-  }
-  else {
+  //if (m_wire.hasWire() && m_ibf.value_size() == sizeof(uint64_t)) {
+  //  std::memcpy(const_cast<uint8_t*>(m_ibf.value()), &ibfValue, sizeof(ibfValue));
+  //}
+  //else {
     m_ibf = makeBinaryBlock(tlv::IBF,
                               reinterpret_cast<const uint8_t*>(&ibfValue),
                               sizeof(ibfValue));
-    m_wire.reset();
-  }
+    //m_wire.reset();
+  //}
+  */
   return *this;
 }
 
