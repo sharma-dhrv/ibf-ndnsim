@@ -136,7 +136,7 @@ main(int argc, char* argv[])
   std::cout << "Total Average excluding zeroes : " << (double)pitSize / k <<std::endl;
   std::cout << "Total Interests : " << ti << std::endl;
   std::cout << "Additional Interests added : " << ia << std::endl;
-  std::cout << "Global PIT counter : " <<ndn::nfd::pit::n_pit_entries << std::endl;
+  std::cout << "Global PIT counter : " <<ndn::nfd::pit::Entry::n_pit_entries << std::endl;
 
   Simulator::Destroy();
 

@@ -36,6 +36,8 @@ namespace pit {
 const Name Entry::LOCALHOST_NAME("ndn:/localhost");
 const Name Entry::LOCALHOP_NAME("ndn:/localhop");
 
+uint32_t Entry::n_pit_entries = 0;
+
 Entry::Entry(const Interest& interest)
   : m_interest(interest.shared_from_this())
   , m_shadowEntry(false)
@@ -147,10 +149,6 @@ Entry::findNonce(uint32_t nonce, const Face& face) const
 InRecordCollection::iterator
 Entry::insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest, bool isShadowRecord=false)
 {
-  if (!isShadowRecord)
-  {
-    n_pit_entries++;
-  }
   bool newRecord = false;
   auto it = std::find_if(m_inRecords.begin(), m_inRecords.end(),
     [&face] (const InRecord& inRecord) { return inRecord.getFace() == face; });
@@ -164,6 +162,10 @@ Entry::insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest, b
   it->setShadowRecord(isShadowRecord);
   if(newRecord) {
     it->setIBF(BloomFilter::merge(it->getIBF(), interest.getIBF()));
+
+    if (!isShadowRecord) {
+      Entry::n_pit_entries++;
+    }
   } else {
     it->setIBF(interest.getIBF());
   }
@@ -180,7 +182,7 @@ Entry::getInRecord(const Face& face) const
 void
 Entry::deleteInRecords()
 {
-  //n_pit_entries--;
+  //Entry::n_pit_entries--;
   m_inRecords.clear();
 }
 

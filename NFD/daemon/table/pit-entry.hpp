@@ -40,8 +40,6 @@ class Entry;
 
 namespace pit {
 
-static uint32_t n_pit_entries = 0;
-
 /** \brief represents an unordered collection of InRecords
  */
 typedef std::list< InRecord>  InRecordCollection;
@@ -69,6 +67,8 @@ enum DuplicateNonceWhere {
 class Entry : public StrategyInfoHost, noncopyable
 {
 public:
+  static uint32_t n_pit_entries;
+
   explicit
   Entry(const Interest& interest);
 
