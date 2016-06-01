@@ -74,13 +74,15 @@ main(int argc, char* argv[])
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
-  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
+  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/semi-stateless-strategy");
 
   // Getting containers for the consumer/producer
   Ptr<Node> consumers[4] = {Names::Find<Node>("c1"), Names::Find<Node>("c2"),
                             Names::Find<Node>("c3"), Names::Find<Node>("c4")};
   Ptr<Node> producers[4] = {Names::Find<Node>("p1"), Names::Find<Node>("p2"),
                             Names::Find<Node>("p3"), Names::Find<Node>("p4")};
+
+  Ptr<Node> routers[3]   = {Names::Find<Node>("n1"), Names::Find<Node>("n2"), Names::Find<Node>("n12")};
 
   if (consumers[0] == 0 || consumers[1] == 0 || consumers[2] == 0 || consumers[3] == 0
       || producers[0] == 0 || producers[1] == 0 || producers[2] == 0 || producers[3] == 0) {
@@ -95,12 +97,12 @@ main(int argc, char* argv[])
     /////////////////////////////////////////////////////////////////////////////////
 
     ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-    consumerHelper.SetAttribute("Frequency", StringValue("10")); // 100 interests a second
+    consumerHelper.SetAttribute("Frequency", StringValue("1000")); // 100 interests a second
 
     consumerHelper.SetPrefix(prefix);
     ApplicationContainer consumer = consumerHelper.Install(consumers[i]);
     consumer.Start(Seconds(i));     // start consumers at 0s, 1s, 2s, 3s
-    consumer.Stop(Seconds(19 - i)); // stop consumers at 19s, 18s, 17s, 16s
+    consumer.Stop(Seconds(29 - i)); // stop consumers at 19s, 18s, 17s, 16s
 
     ///////////////////////////////////////////////
     // install producer app on producer node p_i //
@@ -132,8 +134,59 @@ main(int argc, char* argv[])
   ndn::FibHelper::AddRoute("n2", "/data/p4", "p4", 1); // link to p4
 
   // Schedule simulation time and run the simulation
-  Simulator::Stop(Seconds(20.0));
+  Simulator::Stop(Seconds(30.0));
   Simulator::Run();
+
+  int pitSize = 0;
+  int N = 11;
+  int K = 11;
+  int temp = 0;
+  int ti = 0;
+  int ia = 0;
+
+  for (auto pn : consumers)
+  {
+      temp = pn->GetObject<ndn::L3Protocol>()->getForwarder()->getPit().size();
+      ia += pn->GetObject<ndn::L3Protocol>()->getForwarder()->totalInterests;
+      ti += pn->GetObject<ndn::L3Protocol>()->getForwarder()->overheadInterests;
+      if (temp == 0)
+      {
+        K--;
+      }
+      pitSize += temp;
+  }
+
+  for (auto pn : producers)
+  {
+      temp = pn->GetObject<ndn::L3Protocol>()->getForwarder()->getPit().size();
+      ia += pn->GetObject<ndn::L3Protocol>()->getForwarder()->totalInterests;
+      ti += pn->GetObject<ndn::L3Protocol>()->getForwarder()->overheadInterests;
+      if (temp == 0)
+      {
+        K--;
+      }
+      pitSize += temp;
+  }
+
+  for (auto pn : routers)
+  {
+      temp = pn->GetObject<ndn::L3Protocol>()->getForwarder()->getPit().size();
+      ia += pn->GetObject<ndn::L3Protocol>()->getForwarder()->totalInterests;
+      ti += pn->GetObject<ndn::L3Protocol>()->getForwarder()->overheadInterests;
+      if (temp == 0)
+      {
+        K--;
+      }
+      pitSize += temp;
+  }
+
+  std::cout << "Number of PIT Entries : " << pitSize << std::endl;
+  std::cout << "Total Average : " << (double)pitSize / N << std::endl;
+  std::cout << "Total Average excluding Zero : " << (double)pitSize / K << std::endl;
+  std::cout << "Total Interests : " << ti << std::endl;
+  std::cout << "Additional Interests added : " << ia << std::endl;
+  std::cout << "Global PIT counter : " <<ndn::nfd::pit::n_pit_entries << std::endl;
+
   Simulator::Destroy();
 
   return 0;

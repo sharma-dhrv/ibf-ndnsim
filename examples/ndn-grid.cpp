@@ -90,7 +90,7 @@ main(int argc, char* argv[])
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
   consumerHelper.SetPrefix(prefix);
-  consumerHelper.SetAttribute("Frequency", StringValue("1")); // 100 interests a second
+  consumerHelper.SetAttribute("Frequency", StringValue("1000")); // 100 interests a second
   consumerHelper.Install(consumerNodes);
 
   ndn::AppHelper producerHelper("ns3::ndn::Producer");
@@ -104,9 +104,40 @@ main(int argc, char* argv[])
   // Calculate and install FIBs
   ndn::GlobalRoutingHelper::CalculateRoutes();
 
-  Simulator::Stop(Seconds(15.0));
+  Simulator::Stop(Seconds(30.0));
 
   Simulator::Run();
+
+  int pitSize = 0;
+  int k = 9;
+  int N = 9;
+  int temp = 0;
+  int ia = 0;
+  int ti = 0;
+
+  for ( int i = 0 ; i < 3 ; i++ )
+  {
+    for ( int j = 0 ; j < 3 ; j++ )
+    {
+      Ptr<Node> pn = grid.GetNode(i, j);
+      temp = pn->GetObject<ndn::L3Protocol>()->getForwarder()->getPit().size();
+      ia += pn->GetObject<ndn::L3Protocol>()->getForwarder()->totalInterests;
+      ti += pn->GetObject<ndn::L3Protocol>()->getForwarder()->overheadInterests;
+      pitSize += temp;
+      if (temp == 0)
+      {
+        k--;
+      }
+    }
+  }
+
+  std::cout << "Number of PIT Entries : " << pitSize << std::endl;
+  std::cout << "Total Average : " << (double)pitSize / N << std::endl;
+  std::cout << "Total Average excluding zeroes : " << (double)pitSize / k <<std::endl;
+  std::cout << "Total Interests : " << ti << std::endl;
+  std::cout << "Additional Interests added : " << ia << std::endl;
+  std::cout << "Global PIT counter : " <<ndn::nfd::pit::n_pit_entries << std::endl;
+
   Simulator::Destroy();
 
   return 0;

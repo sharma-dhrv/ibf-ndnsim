@@ -34,7 +34,7 @@ static_assert(std::is_base_of<tlv::Error, Data::Error>::value,
 
 const uint64_t Data::IBF_SIZE_IN_BITS = 64;
 const uint8_t Data::NUM_HASH_FUNCTIONS = 10;
-const uint32_t Data::HOP_INTERVAL = 3;
+const uint32_t Data::HOP_INTERVAL = 1;
 
 Data::Data()
   : m_content(tlv::Content) // empty content

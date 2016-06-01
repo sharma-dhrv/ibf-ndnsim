@@ -24,9 +24,13 @@
  */
 
 #include "pit-entry.hpp"
+#include "fw/forwarder.hpp"
 #include <algorithm>
 
 namespace nfd {
+
+class Forwarder;
+
 namespace pit {
 
 const Name Entry::LOCALHOST_NAME("ndn:/localhost");
@@ -143,6 +147,10 @@ Entry::findNonce(uint32_t nonce, const Face& face) const
 InRecordCollection::iterator
 Entry::insertOrUpdateInRecord(shared_ptr<Face> face, const Interest& interest, bool isShadowRecord=false)
 {
+  if (!isShadowRecord)
+  {
+    n_pit_entries++;
+  }
   bool newRecord = false;
   auto it = std::find_if(m_inRecords.begin(), m_inRecords.end(),
     [&face] (const InRecord& inRecord) { return inRecord.getFace() == face; });
@@ -172,6 +180,7 @@ Entry::getInRecord(const Face& face) const
 void
 Entry::deleteInRecords()
 {
+  //n_pit_entries--;
   m_inRecords.clear();
 }
 

@@ -35,7 +35,7 @@ static_assert(std::is_base_of<tlv::Error, Interest::Error>::value,
 
 const uint64_t Interest::IBF_SIZE_IN_BITS = 64;
 const uint8_t Interest::NUM_HASH_FUNCTIONS = 10;
-const uint32_t Interest::HOP_INTERVAL = 3;
+const uint32_t Interest::HOP_INTERVAL = 1;
 
 Interest::Interest()
   : m_interestLifetime(time::milliseconds::min())

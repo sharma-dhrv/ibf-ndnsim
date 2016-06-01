@@ -109,14 +109,14 @@ Forwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   if ( genNameHash(name, suffix) == 0) {
   */
 
-  /*
+  
   // Probabalistic scheme
   if (randRealDist(getGlobalRng()) < Interest::HOP_INTERVAL || interest.getHopCounter() == 0) {
-  */
+  
 
   
   // Hop Counter scheme
-  if (interest.getHopCounter() == 0) {
+  //if (interest.getHopCounter() == 0) {
   
 	  pitEntry = m_pit.insert(interest, false).first;
   }
