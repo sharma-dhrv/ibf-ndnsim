@@ -1,5 +1,5 @@
-ICN - ndnSIM
-============
+In-Packet Bloom Filter (iBF) - ndnSIM
+====================================
 
 
 Before cloning this repository follow the following steps:-
