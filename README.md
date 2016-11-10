@@ -5,40 +5,54 @@ ICN - ndnSIM
 Before cloning this repository follow the following steps:-
 
 1. Install libboost dependency for NDN-Sim. Make sure that all other version of boost libraries (-dev packages) are removed, otherwise compilation might fail.
-> sudo apt-get install python-software-properties
-> sudo add-apt-repository ppa:boost-latest/ppa
-> sudo apt-get update
-> sudo apt-get install libboost1.55-all-dev
+```
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:boost-latest/ppa
+sudo apt-get update
+sudo apt-get install libboost1.55-all-dev
+```
 
 2. Install other dependencies.
-> sudo apt-get install python-dev python-pygraphviz python-kiwi
-> sudo apt-get install python-pygoocanvas python-gnome2
-> sudo apt-get install python-rsvg ipython
+```
+sudo apt-get install python-dev python-pygraphviz python-kiwi
+sudo apt-get install python-pygoocanvas python-gnome2
+sudo apt-get install python-rsvg ipython
+```
 
 3. Clone NS-3 and NDN-Sim. 
-> mkdir ndnSIM
-> cd ndnSIM
-> git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
-> git clone https://github.com/cawka/pybindgen.git pybindgen
-> git clone https://git.ucsd.edu/dhsharma/ndnSIM.git ns-3/src/ndnSIM
+```
+mkdir ndnSIM
+cd ndnSIM
+git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
+git clone https://github.com/cawka/pybindgen.git pybindgen
+git clone https://git.ucsd.edu/dhsharma/ndnSIM.git ns-3/src/ndnSIM
+```
 
 4. Compile NS-3 with NDN-Sim.
-> cd ns-3
-> ./waf configure --enable-examples
-> ./waf
-> If waf configure fails do this: 
-> sudo apt-get install libcrypto+ sqlite3 libsqlite3-dev
+```
+cd ns-3
+./waf configure --enable-examples
+./waf
+```
+If waf configure fails do this: 
+```
+sudo apt-get install libcrypto+ sqlite3 libsqlite3-dev
+```
 
 5. Run an example senario to test the build.
-> ./waf --run=ndn-simple
+```
+./waf --run=ndn-simple
+```
 OR
-> ./waf --run=ndn-grid
+```
+./waf --run=ndn-grid
+```
 
 Credits
 
 1. Our work of porting semi-stateless forwarding using in-packet bloom filters is based on Christos Tsilopoulos’s Doctoral Thesis (http://mm.aueb.gr/phd_theses/2016_Tsilopoulos.pdf) and their research paper "C. Tsilopoulos, Y. Thomas and G. Xylomenos, 'Reducing Forwarding State in Content-Centric Networks with Semi-Stateless Forwarding' in Proc. of IEEE INFOCOM, pp. 2067-2075, 2014."
 
-2. NDN-Sim and NFD developer teams.
+2. ndnSIM and NFD developer teams.
 
 About ndnSIM
 --------------
