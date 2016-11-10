@@ -25,7 +25,7 @@ mkdir ndnSIM
 cd ndnSIM
 git clone https://github.com/cawka/ns-3-dev-ndnSIM.git ns-3
 git clone https://github.com/cawka/pybindgen.git pybindgen
-git clone https://git.ucsd.edu/dhsharma/ndnSIM.git ns-3/src/ndnSIM
+git clone https://github.com/sharma-dhrv/ibf-ndnsim.git ns-3/src/ndnSIM
 ```
 
 4. Compile NS-3 with NDN-Sim.
