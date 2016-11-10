@@ -48,7 +48,13 @@ OR
 ./waf --run=ndn-grid
 ```
 
+Experimental Report and Presentation
+--------------------------------------
+Presentation : https://docs.google.com/presentation/d/1NGQp8hbmcpTgwTbbILyhigETufvyZZ3denDbExKEFlA/edit?usp=sharing
+Report : https://docs.google.com/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxzaGFybWFkaHJ2fGd4OjIxODY4ZDJhZDY3M2NhNGM
+
 Credits
+--------
 
 1. Our work of porting semi-stateless forwarding using in-packet bloom filters is based on Christos Tsilopoulos’s Doctoral Thesis (http://mm.aueb.gr/phd_theses/2016_Tsilopoulos.pdf) and their research paper "C. Tsilopoulos, Y. Thomas and G. Xylomenos, 'Reducing Forwarding State in Content-Centric Networks with Semi-Stateless Forwarding' in Proc. of IEEE INFOCOM, pp. 2067-2075, 2014."
 
