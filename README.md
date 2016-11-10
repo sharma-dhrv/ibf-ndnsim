@@ -34,8 +34,14 @@ Before cloning this repository follow the following steps:-
 OR
 > ./waf --run=ndn-grid
 
+Credits
 
-[![Build Status](https://travis-ci.org/named-data-ndnSIM/ndnSIM.svg)](https://travis-ci.org/named-data-ndnSIM/ndnSIM)
+1. Our work of porting semi-stateless forwarding using in-packet bloom filters is based on Christos Tsilopoulos’s Doctoral Thesis (http://mm.aueb.gr/phd_theses/2016_Tsilopoulos.pdf) and their research paper "C. Tsilopoulos, Y. Thomas and G. Xylomenos, 'Reducing Forwarding State in Content-Centric Networks with Semi-Stateless Forwarding' in Proc. of IEEE INFOCOM, pp. 2067-2075, 2014."
+
+2. NDN-Sim and NFD developer teams.
+
+About ndnSIM
+--------------
 
 A new release of [NS-3 based Named Data Networking (NDN) simulator](http://ndnsim.net/1.0/)
 went through extensive refactoring and rewriting.  The key new features of the new
